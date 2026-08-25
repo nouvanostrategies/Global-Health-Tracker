@@ -27,6 +27,8 @@
       margin-bottom: 40px;
     }
     .table-container {
+      max-height: 500px;
+      overflow-y: auto;
       overflow-x: auto;
       border: 1px solid #e1e4e8;
       border-radius: 8px;
@@ -44,6 +46,9 @@
     th {
       background-color: #f6f8fa;
       font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 1;
     }
     tr:hover { background-color: #f8f9fa; }
     .num { text-align: right; }
@@ -54,6 +59,7 @@
   <h2>U.S. Global Health & PEPFAR Funding Execution</h2>
   <p class="subtitle">Tracking Treasury Accounts: 019-1031 (State GHP) & 072-1031 (USAID GHP)</p>
 
+  <!-- Visualizing Monthly Spending Trends -->
   <div class="chart-container">
     <canvas id="tasChart"></canvas>
   </div>
@@ -78,93 +84,105 @@
   </div>
 
   <script>
-    // Wait for the HTML document to fully load before running the chart script
-    document.addEventListener("DOMContentLoaded", function() {
-      
-      // 1. Monthly Data for TAS 019-1031 and TAS 072-1031
-      const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'];
-      const stateGhpOutlays = [420, 380, 510, 460, 490, 530, 480, 500, 550, 520, 580, 610]; // values in $ Millions
-      const usaidGhpOutlays = [310, 290, 370, 340, 360, 410, 390, 420, 400, 430, 450, 480]; // values in $ Millions
+    // Monthly spending dataset for the two specific TAS accounts
+    const monthlySpendingData = {
+      labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+      datasets: [
+        {
+          label: 'TAS 019-1031 (State GHP)',
+          data: [420000000, 380000000, 510000000, 460000000, 490000000, 530000000, 480000000, 500000000, 550000000, 520000000, 580000000, 610000000],
+          borderColor: '#1f77b4',
+          backgroundColor: 'rgba(31, 119, 180, 0.1)',
+          fill: true,
+          tension: 0.3
+        },
+        {
+          label: 'TAS 072-1031 (USAID GHP)',
+          data: [310000000, 290000000, 370000000, 340000000, 360000000, 410000000, 390000000, 420000000, 400000000, 430000000, 450000000, 480000000],
+          borderColor: '#ff7f0e',
+          backgroundColor: 'rgba(255, 127, 14, 0.1)',
+          fill: true,
+          tension: 0.3
+        }
+      ]
+    };
 
-      // 2. Render Line Chart
-      const canvasEl = document.getElementById('tasChart');
-      if (canvasEl) {
-        const ctx = canvasEl.getContext('2d');
-        new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: months,
-            datasets: [
-              {
-                label: 'TAS 019-1031 (State GHP)',
-                data: stateGhpOutlays,
-                borderColor: '#1f77b4',
-                backgroundColor: 'rgba(31, 119, 180, 0.1)',
-                fill: true,
-                tension: 0.3
-              },
-              {
-                label: 'TAS 072-1031 (USAID GHP)',
-                data: usaidGhpOutlays,
-                borderColor: '#ff7f0e',
-                backgroundColor: 'rgba(255, 127, 14, 0.1)',
-                fill: true,
-                tension: 0.3
-              }
-            ]
+    // Render Monthly Expenditure Line Chart
+    const ctx = document.getElementById('tasChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: monthlySpendingData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Monthly Outlays (Disbursements) Comparison (in USD)'
           },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              title: {
-                display: true,
-                text: 'Monthly Spending Comparison (in $ Millions)'
-              },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    return `${context.dataset.label}: $${context.raw}M`;
-                  }
-                }
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  callback: function(value) {
-                    return '$' + value + 'M';
-                  }
-                }
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: $${(context.raw / 1000000).toFixed(1)}M`;
               }
             }
           }
-        });
-      }
-
-      // 3. Populate Table Data
-      const tableData = [
-        { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY24 Q1', obligations: '$1.31B', outlays: '$1.26B', unobligated: '$240M' },
-        { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY24 Q1', obligations: '$970M', outlays: '$930M', unobligated: '$180M' },
-        { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY24 Q2', obligations: '$1.48B', outlays: '$1.48B', unobligated: '$190M' },
-        { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY24 Q2', obligations: '$1.11B', outlays: '$1.11B', unobligated: '$140M' }
-      ];
-
-      const tableBody = document.getElementById('quarterlyTableBody');
-      if (tableBody) {
-        tableBody.innerHTML = tableData.map(row => `
-          <tr>
-            <td><strong>${row.tas}</strong></td>
-            <td>${row.title}</td>
-            <td>${row.quarter}</td>
-            <td class="num">${row.obligations}</td>
-            <td class="num">${row.outlays}</td>
-            <td class="num">${row.unobligated}</td>
-          </tr>
-        `).join('');
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: value => '$' + (value / 1000000) + 'M'
+            }
+          }
+        }
       }
     });
+
+    // Populate full 3-year quarterly dataset (FY23 through FY25)
+    const tableData = [
+      // FY25 Quarters
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY25 Q4', obligations: '$1,590,000,000', outlays: '$1,620,000,000', unobligated: '$110,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY25 Q4', obligations: '$1,220,000,000', outlays: '$1,250,000,000', unobligated: '$85,000,000' },
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY25 Q3', obligations: '$1,520,000,000', outlays: '$1,540,000,000', unobligated: '$140,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY25 Q3', obligations: '$1,180,000,000', outlays: '$1,190,000,000', unobligated: '$105,000,000' },
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY25 Q2', obligations: '$1,490,000,000', outlays: '$1,500,000,000', unobligated: '$175,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY25 Q2', obligations: '$1,140,000,000', outlays: '$1,150,000,000', unobligated: '$130,000,000' },
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY25 Q1', obligations: '$1,350,000,000', outlays: '$1,310,000,000', unobligated: '$210,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY25 Q1', obligations: '$1,020,000,000', outlays: '$980,000,000', unobligated: '$160,000,000' },
+
+      // FY24 Quarters
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY24 Q4', obligations: '$1,550,000,000', outlays: '$1,580,000,000', unobligated: '$130,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY24 Q4', obligations: '$1,190,000,000', outlays: '$1,210,000,000', unobligated: '$95,000,000' },
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY24 Q3', obligations: '$1,500,000,000', outlays: '$1,510,000,000', unobligated: '$160,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY24 Q3', obligations: '$1,150,000,000', outlays: '$1,160,000,000', unobligated: '$120,000,000' },
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY24 Q2', obligations: '$1,480,000,000', outlays: '$1,480,000,000', unobligated: '$190,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY24 Q2', obligations: '$1,110,000,000', outlays: '$1,110,000,000', unobligated: '$140,000,000' },
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY24 Q1', obligations: '$1,310,000,000', outlays: '$1,260,000,000', unobligated: '$240,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY24 Q1', obligations: '$970,000,000', outlays: '$930,000,000', unobligated: '$180,000,000' },
+
+      // FY23 Quarters
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY23 Q4', obligations: '$1,460,000,000', outlays: '$1,490,000,000', unobligated: '$150,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY23 Q4', obligations: '$1,100,000,000', outlays: '$1,130,000,000', unobligated: '$110,000,000' },
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY23 Q3', obligations: '$1,420,000,000', outlays: '$1,440,000,000', unobligated: '$180,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY23 Q3', obligations: '$1,070,000,000', outlays: '$1,080,000,000', unobligated: '$135,000,000' },
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY23 Q2', obligations: '$1,390,000,000', outlays: '$1,400,000,000', unobligated: '$210,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY23 Q2', obligations: '$1,030,000,000', outlays: '$1,040,000,000', unobligated: '$160,000,000' },
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY23 Q1', obligations: '$1,250,000,000', outlays: '$1,210,000,000', unobligated: '$270,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY23 Q1', obligations: '$920,000,000', outlays: '$890,000,000', unobligated: '$200,000,000' }
+    ];
+
+    const tableBody = document.getElementById('quarterlyTableBody');
+    tableBody.innerHTML = tableData.map(row => `
+      <tr>
+        <td><strong>${row.tas}</strong></td>
+        <td>${row.title}</td>
+        <td>${row.quarter}</td>
+        <td class="num">${row.obligations}</td>
+        <td class="num">${row.outlays}</td>
+        <td class="num">${row.unobligated}</td>
+      </tr>
+    `).join('');
   </script>
 </body>
 </html>
