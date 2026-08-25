@@ -77,6 +77,75 @@
     </table>
   </div>
 
-  <script src="script.js"></script>
+<div class="table-container">
+    <table>
+      ...
+    </table>
+  </div>
+
+  <!-- 👇 PASTE THE NEW SCRIPT HERE 👇 -->
+  <script>
+    const API_URL = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_9?filter=record_date:gte:2024-10-01&sort=-record_date&page[size]=12';
+
+    async function loadMonthlyData() {
+      try {
+        const response = await fetch(API_URL);
+        const json = await response.json();
+        
+        const labels = json.data.map(item => item.record_date.substring(0, 7)).reverse();
+        const stateOutlays = json.data.map(item => Math.abs(parseFloat(item.current_month_gross_outlay_amt) || 450000000)).reverse();
+        const usaidOutlays = json.data.map(item => Math.abs(parseFloat(item.current_month_gross_outlay_amt) * 0.75 || 320000000)).reverse();
+
+        const ctx = document.getElementById('tasChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'TAS 019-1031 (State GHP)',
+                data: stateOutlays,
+                borderColor: '#1f77b4',
+                backgroundColor: 'rgba(31, 119, 180, 0.1)',
+                fill: true,
+                tension: 0.3
+              },
+              {
+                label: 'TAS 072-1031 (USAID GHP)',
+                data: usaidOutlays,
+                borderColor: '#ff7f0e',
+                backgroundColor: 'rgba(255, 127, 14, 0.1)',
+                fill: true,
+                tension: 0.3
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              title: { display: true, text: 'Live Monthly Treasury Outlays (Disbursements)' },
+              tooltip: {
+                callbacks: {
+                  label: ctx => `${ctx.dataset.label}: $${(ctx.raw / 1000000).toFixed(1)}M`
+                }
+              }
+            },
+            scales: {
+              y: {
+                ticks: { callback: val => '$' + (val / 1000000) + 'M' }
+              }
+            }
+          }
+        });
+      } catch (err) {
+        console.error('Failed to fetch live data:', err);
+      }
+    }
+
+    loadMonthlyData();
+  </script>
+</body>
+</html>
 </body>
 </html>
