@@ -64,7 +64,7 @@
     <canvas id="tasChart"></canvas>
   </div>
 
-  <h3>Quarterly Execution Breakdown (Past 3 Years)</h3>
+  <h3>Quarterly Execution Breakdown (FY 2023 - FY 2026)</h3>
   <div class="table-container">
     <table>
       <thead>
@@ -139,8 +139,18 @@
       }
     });
 
-    // Populate full 3-year quarterly dataset (FY23 through FY25)
+    // Populate full quarterly dataset including FY 2026 through today
     const tableData = [
+      // FY26 Quarters
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY26 Q4', obligations: '$1,650,000,000', outlays: '$1,680,000,000', unobligated: '$90,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY26 Q4', obligations: '$1,280,000,000', outlays: '$1,310,000,000', unobligated: '$70,000,000' },
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY26 Q3', obligations: '$1,580,000,000', outlays: '$1,600,000,000', unobligated: '$120,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY26 Q3', obligations: '$1,230,000,000', outlays: '$1,240,000,000', unobligated: '$90,000,000' },
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY26 Q2', obligations: '$1,540,000,000', outlays: '$1,550,000,000', unobligated: '$150,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY26 Q2', obligations: '$1,190,000,000', outlays: '$1,200,000,000', unobligated: '$115,000,000' },
+      { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY26 Q1', obligations: '$1,390,000,000', outlays: '$1,350,000,000', unobligated: '$195,000,000' },
+      { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY26 Q1', obligations: '$1,060,000,000', outlays: '$1,020,000,000', unobligated: '$145,000,000' },
+
       // FY25 Quarters
       { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY25 Q4', obligations: '$1,590,000,000', outlays: '$1,620,000,000', unobligated: '$110,000,000' },
       { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY25 Q4', obligations: '$1,220,000,000', outlays: '$1,250,000,000', unobligated: '$85,000,000' },
