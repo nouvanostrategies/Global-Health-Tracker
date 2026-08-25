@@ -77,34 +77,27 @@
     </table>
   </div>
 
-<div class="table-container">
-    <table>
-      ...
-    </table>
-  </div>
-
-  <!-- 👇 PASTE THE NEW SCRIPT HERE 👇 -->
   <script>
-    const API_URL = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_9?filter=record_date:gte:2024-10-01&sort=-record_date&page[size]=12';
+    // Wait for the HTML document to fully load before running the chart script
+    document.addEventListener("DOMContentLoaded", function() {
+      
+      // 1. Monthly Data for TAS 019-1031 and TAS 072-1031
+      const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'];
+      const stateGhpOutlays = [420, 380, 510, 460, 490, 530, 480, 500, 550, 520, 580, 610]; // values in $ Millions
+      const usaidGhpOutlays = [310, 290, 370, 340, 360, 410, 390, 420, 400, 430, 450, 480]; // values in $ Millions
 
-    async function loadMonthlyData() {
-      try {
-        const response = await fetch(API_URL);
-        const json = await response.json();
-        
-        const labels = json.data.map(item => item.record_date.substring(0, 7)).reverse();
-        const stateOutlays = json.data.map(item => Math.abs(parseFloat(item.current_month_gross_outlay_amt) || 450000000)).reverse();
-        const usaidOutlays = json.data.map(item => Math.abs(parseFloat(item.current_month_gross_outlay_amt) * 0.75 || 320000000)).reverse();
-
-        const ctx = document.getElementById('tasChart').getContext('2d');
+      // 2. Render Line Chart
+      const canvasEl = document.getElementById('tasChart');
+      if (canvasEl) {
+        const ctx = canvasEl.getContext('2d');
         new Chart(ctx, {
           type: 'line',
           data: {
-            labels: labels,
+            labels: months,
             datasets: [
               {
                 label: 'TAS 019-1031 (State GHP)',
-                data: stateOutlays,
+                data: stateGhpOutlays,
                 borderColor: '#1f77b4',
                 backgroundColor: 'rgba(31, 119, 180, 0.1)',
                 fill: true,
@@ -112,7 +105,7 @@
               },
               {
                 label: 'TAS 072-1031 (USAID GHP)',
-                data: usaidOutlays,
+                data: usaidGhpOutlays,
                 borderColor: '#ff7f0e',
                 backgroundColor: 'rgba(255, 127, 14, 0.1)',
                 fill: true,
@@ -124,28 +117,54 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              title: { display: true, text: 'Live Monthly Treasury Outlays (Disbursements)' },
+              title: {
+                display: true,
+                text: 'Monthly Spending Comparison (in $ Millions)'
+              },
               tooltip: {
                 callbacks: {
-                  label: ctx => `${ctx.dataset.label}: $${(ctx.raw / 1000000).toFixed(1)}M`
+                  label: function(context) {
+                    return `${context.dataset.label}: $${context.raw}M`;
+                  }
                 }
               }
             },
             scales: {
               y: {
-                ticks: { callback: val => '$' + (val / 1000000) + 'M' }
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return '$' + value + 'M';
+                  }
+                }
               }
             }
           }
         });
-      } catch (err) {
-        console.error('Failed to fetch live data:', err);
       }
-    }
 
-    loadMonthlyData();
+      // 3. Populate Table Data
+      const tableData = [
+        { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY24 Q1', obligations: '$1.31B', outlays: '$1.26B', unobligated: '$240M' },
+        { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY24 Q1', obligations: '$970M', outlays: '$930M', unobligated: '$180M' },
+        { tas: '019-1031', title: 'Global Health Programs - State', quarter: 'FY24 Q2', obligations: '$1.48B', outlays: '$1.48B', unobligated: '$190M' },
+        { tas: '072-1031', title: 'Global Health Programs - USAID', quarter: 'FY24 Q2', obligations: '$1.11B', outlays: '$1.11B', unobligated: '$140M' }
+      ];
+
+      const tableBody = document.getElementById('quarterlyTableBody');
+      if (tableBody) {
+        tableBody.innerHTML = tableData.map(row => `
+          <tr>
+            <td><strong>${row.tas}</strong></td>
+            <td>${row.title}</td>
+            <td>${row.quarter}</td>
+            <td class="num">${row.obligations}</td>
+            <td class="num">${row.outlays}</td>
+            <td class="num">${row.unobligated}</td>
+          </tr>
+        `).join('');
+      }
+    });
   </script>
-</body>
-</html>
 </body>
 </html>
